@@ -1,0 +1,420 @@
+@charset "utf-8";
+
+/* ── 격자예보 ────────────────────────────────────────────────────────────
+   기상청 격자가 곧 블록이다. 그러니 화면도 블록으로 짓는다.
+   둥근 모서리도, 번지는 그림자도 없다. 베벨은 한 겹 밝게 한 겹 어둡게,
+   그림자는 흐림 0의 계단식. 글자는 픽셀 글꼴(갈무리).
+   하늘색은 지금 예보가 정한다 — body[data-sky] / body[data-phase].
+   ──────────────────────────────────────────────────────────────────── */
+
+:root {
+  --pixel: 'Galmuri11', 'Malgun Gothic', ui-monospace, monospace;      /* 11 · 22 · 33 · 44px */
+  --pixel-sm: 'Galmuri9', 'Galmuri11', 'Malgun Gothic', monospace;      /* 9 · 18px */
+  --pixel-lg: 'Galmuri14', 'Galmuri11', 'Malgun Gothic', monospace;     /* 14 · 28 · 56 · 84 · 112px */
+
+  --gutter: clamp(1rem, 4vw, 4rem);
+  --edge: #1b1b1b;
+
+  --panel: #c6c6c6;
+  --panel-hi: #f2f2f2;
+  --panel-lo: #5b5b5b;
+  --ink: #2f2f2f;
+  --ink-soft: #6a6a6a;
+
+  --gold: #fcc319;
+  --gold-lo: #9d760a;
+  --water: #2f5fc4;
+  --grass: #78a94e;
+
+  /* 하늘 — 기본은 맑은 낮 */
+  --sky: #79c0f2;
+  --sky-ink: #12263a;
+  --sky-shadow: rgba(0, 0, 0, .2);
+}
+
+body[data-sky='cloudy'] { --sky: #a0b6c6; --sky-ink: #19242e; }
+body[data-sky='overcast'] { --sky: #8b959d; --sky-ink: #151b20; }
+body[data-sky='rain'] { --sky: #5e7484; --sky-ink: #f0f5f9; --sky-shadow: rgba(0, 0, 0, .4); }
+body[data-sky='snow'] { --sky: #c6dae7; --sky-ink: #16222c; }
+
+body[data-phase='night'] { --sky: #131e3a; --sky-ink: #dbe6f5; --sky-shadow: rgba(0, 0, 0, .55); --gold: #ffd75e; }
+body[data-phase='night'][data-sky='rain'] { --sky: #0d1522; }
+body[data-phase='night'][data-sky='snow'] { --sky: #1b2740; }
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--sky);
+  color: var(--sky-ink);
+  font-family: var(--pixel);
+  font-size: 11px;
+  line-height: 1.8;
+  transition: background-color .6s steps(6, end);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body { transition: none; }
+  *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0ms !important; }
+}
+
+h1, h2 { margin: 0; font-weight: 400; }
+p { margin: 0; }
+img { max-width: 100%; }
+
+main { max-width: 1180px; margin-inline: auto; }
+
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+
+.skip {
+  position: absolute; left: -9999px; top: 0; z-index: 10;
+  padding: .6em 1em; background: var(--edge); color: #fff; text-decoration: none;
+}
+.skip:focus { left: 0; }
+
+/* ── 머리 ─────────────────────────────────────────────────────────── */
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .75rem 1.5rem;
+  max-width: 1180px;
+  margin-inline: auto;
+  padding: clamp(.9rem, 3vw, 1.5rem) var(--gutter);
+}
+
+.wordmark {
+  flex: none;
+  margin-inline-end: auto;
+  font-family: var(--pixel-lg);
+  font-size: 28px;
+  letter-spacing: .04em;
+  color: var(--sky-ink);
+  text-shadow: 3px 3px 0 var(--sky-shadow);
+}
+
+/* ── 동네 찾기 ────────────────────────────────────────────────────── */
+
+.finder {
+  position: relative;
+  display: flex;
+  gap: .5rem;
+  flex: 1 1 18rem;
+  max-width: 28rem;
+}
+
+.finder-label { position: absolute; left: -9999px; }
+
+.finder input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: .7rem .75rem;
+  font: inherit;
+  font-size: 11px;
+  color: #e8e8e8;
+  background: #0d0d0d;
+  border: 3px solid var(--edge);
+  border-radius: 0;
+  box-shadow: inset 2px 2px 0 #343434;
+}
+.finder input::placeholder { color: #7d7d7d; }
+.finder input:focus { outline-offset: 0; }
+
+.btn {
+  flex: none;
+  padding: .7rem .9rem;
+  font: inherit;
+  font-size: 11px;
+  color: var(--ink);
+  background: var(--panel);
+  border: 3px solid var(--edge);
+  border-radius: 0;
+  box-shadow: inset 2px 2px 0 var(--panel-hi), inset -2px -2px 0 var(--panel-lo);
+  cursor: pointer;
+}
+.btn:hover:not(:disabled) { background: #d8d8d8; color: var(--gold-lo); }
+.btn:active:not(:disabled) { box-shadow: inset 2px 2px 0 var(--panel-lo), inset -2px -2px 0 var(--panel-hi); }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 8;
+  max-height: 19rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 3px;
+  list-style: none;
+  background: #0d0d0d;
+  border: 3px solid var(--edge);
+  box-shadow: inset 2px 2px 0 #343434;
+}
+
+.results li {
+  display: flex;
+  align-items: baseline;
+  gap: .5rem;
+  padding: .45rem .5rem;
+  color: #d4d4d4;
+  cursor: pointer;
+}
+.results li[aria-selected='true'] { background: var(--gold); color: #17140a; }
+.results .r-dong { color: #fff; }
+.results li[aria-selected='true'] .r-dong { color: #17140a; }
+.results .r-up { color: #8b8b8b; font-family: var(--pixel-sm); font-size: 9px; }
+.results li[aria-selected='true'] .r-up { color: #4a4024; }
+.results .r-cell { margin-inline-start: auto; font-family: var(--pixel-sm); font-size: 9px; color: #7f92ad; }
+.results li[aria-selected='true'] .r-cell { color: #4a4024; }
+.results .r-empty { color: #8b8b8b; cursor: default; }
+
+/* ── 지금 ─────────────────────────────────────────────────────────── */
+
+.now {
+  position: relative;
+  padding-bottom: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.terrain { padding-inline: var(--gutter); }
+
+#map {
+  display: block;
+  width: 100%;
+  height: clamp(420px, calc(100vh - 150px), 900px);
+  max-width: none;
+  cursor: pointer;
+  shape-rendering: crispEdges;
+}
+
+.beam { fill: #fff7d6; opacity: .28; }
+.beam-core { fill: #fffdf2; opacity: .8; }
+.pin-top { fill: #fde96a; }
+.pin-left { fill: #e0b520; }
+.pin-right { fill: #b88a0c; }
+
+.map-hint {
+  display: block;
+  padding: 0 var(--gutter);
+  margin-top: .4rem;
+  min-height: 1.8em;
+  color: var(--sky-ink);
+  opacity: .85;
+  text-shadow: 2px 2px 0 var(--sky-shadow);
+}
+
+/* 지형 위, 동해 쪽 빈 하늘에 떠 있는 상태창 */
+.hud {
+  position: absolute;
+  top: clamp(.5rem, 2vw, 1.5rem);
+  right: var(--gutter);
+  z-index: 2;
+  width: min(23rem, calc(100% - var(--gutter) * 2));
+  padding: clamp(1rem, 2vw, 1.4rem) clamp(1rem, 2vw, 1.4rem) 1rem;
+
+  background: var(--panel);
+  border: 3px solid var(--edge);
+  box-shadow: inset 3px 3px 0 var(--panel-hi), inset -3px -3px 0 var(--panel-lo);
+  color: var(--ink);
+}
+
+.lede {
+  font-family: var(--pixel-lg);
+  font-size: 14px;
+  color: #1c1c1c;
+  margin-bottom: .3rem;
+}
+
+.temp {
+  display: flex;
+  align-items: flex-start;
+  line-height: 1;
+  color: #1c1c1c;
+}
+
+.temp-num {
+  font-family: var(--pixel-lg);
+  font-size: 112px;
+  text-shadow: 4px 4px 0 rgba(0, 0, 0, .16);
+}
+
+.deg {
+  font-family: var(--pixel-lg);
+  font-size: 56px;
+  line-height: 1;
+  color: var(--gold-lo);
+  margin-inline-start: .04em;
+}
+
+.state { color: var(--ink); }
+
+.vitals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 1rem 0 0;
+  border-top: 3px solid var(--panel-lo);
+  border-bottom: 3px solid var(--panel-hi);
+}
+
+.vitals > div {
+  flex: 1 1 45%;
+  min-width: 0;
+  padding: .5rem .8rem .5rem 0;
+}
+
+.vitals dt { color: var(--ink-soft); font-family: var(--pixel-sm); font-size: 9px; }
+
+.vitals dd {
+  margin: 0;
+  font-family: var(--pixel-lg);
+  font-size: 14px;
+  color: #1c1c1c;
+}
+
+.vitals .unit { font-family: var(--pixel-sm); font-size: 9px; color: var(--ink-soft); margin-inline-start: .3em; }
+
+.stamp { margin-top: .5rem; color: var(--ink-soft); font-family: var(--pixel-sm); font-size: 9px; }
+.stamp .grid-id { color: var(--water); }
+
+/* ── 구역 머리 ────────────────────────────────────────────────────── */
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .2rem 1rem;
+  padding: 0 var(--gutter);
+  margin-bottom: .9rem;
+}
+
+.section-head h2 {
+  font-family: var(--pixel-lg);
+  font-size: 14px;
+  color: var(--sky-ink);
+  text-shadow: 2px 2px 0 var(--sky-shadow);
+}
+
+.section-note { color: var(--sky-ink); opacity: .7; font-family: var(--pixel-sm); font-size: 9px; }
+
+.ahead, .days { padding-top: clamp(1.25rem, 3vw, 2rem); }
+
+/* ── 앞으로 (시간별) ──────────────────────────────────────────────── */
+
+.ribbon-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-inline: var(--gutter);
+  overscroll-behavior-x: contain;
+}
+
+#ribbon { display: block; max-width: none; shape-rendering: crispEdges; }
+
+.rb-col { fill: #d8a23c; }
+.rb-col-cap { fill: #f6cf72; }
+.rb-col-night { fill: #8f83b8; }
+.rb-col-night-cap { fill: #b8abdd; }
+.rb-seam { fill: #000; opacity: .13; }
+
+.rb-temp-label { fill: var(--sky-ink); font-family: var(--pixel-sm); font-size: 9px; text-anchor: middle; }
+
+/* 맑음은 테두리만, 구름많음은 흰 블록, 흐림은 어두운 블록, 비·눈은 파랑 */
+.rb-sky-1 { fill: none; stroke: #f7d13c; stroke-width: 2; }
+.rb-sky-3 { fill: #eef3f6; }
+.rb-sky-4 { fill: #4e5a65; }
+.rb-wet { fill: #2f6fd8; }
+
+.rb-pop { fill: var(--water); }
+.rb-pop-cap { fill: #6c9bf0; }
+.rb-pop-label { fill: var(--sky-ink); opacity: .75; font-family: var(--pixel-sm); font-size: 9px; text-anchor: middle; }
+
+.rb-hour { fill: var(--sky-ink); opacity: .55; font-family: var(--pixel-sm); font-size: 9px; text-anchor: middle; }
+.rb-hour-mark { opacity: 1; fill: var(--gold); }
+
+.rb-ground { fill: var(--sky-ink); opacity: .22; }
+.rb-daybreak { fill: var(--sky-ink); opacity: .16; }
+.rb-dayname { fill: var(--sky-ink); font-family: var(--pixel); font-size: 11px; }
+.rb-nowcast { fill: #ffffff; opacity: .13; }
+
+/* ── 날마다 ───────────────────────────────────────────────────────── */
+
+.daylist {
+  margin: 0 var(--gutter);
+  padding: .4rem;
+  list-style: none;
+  background: var(--panel);
+  border: 3px solid var(--edge);
+  box-shadow: inset 3px 3px 0 var(--panel-hi), inset -3px -3px 0 var(--panel-lo);
+  color: var(--ink);
+}
+
+.daylist li {
+  display: grid;
+  grid-template-columns: 6.5rem 5rem minmax(4rem, 1fr) 4.5rem;
+  align-items: center;
+  gap: .75rem;
+  padding: .55rem .7rem;
+}
+.daylist li + li { border-top: 3px solid #b0b0b0; }
+
+.d-name { color: #1c1c1c; }
+.d-name .d-date { color: var(--ink-soft); font-family: var(--pixel-sm); margin-inline-start: .5em; font-size: 9px; }
+.d-sky { color: var(--ink-soft); }
+
+.d-range { position: relative; height: 12px; background: #9d9d9d; box-shadow: inset 2px 2px 0 #7f7f7f; }
+.d-fill { position: absolute; top: 0; height: 100%; background: var(--gold); box-shadow: inset 0 2px 0 #ffe27a, inset 0 -2px 0 var(--gold-lo); }
+
+.d-temps { text-align: right; color: #1c1c1c; white-space: nowrap; }
+.d-temps .d-low { color: var(--water); }
+.d-temps .d-slash { color: var(--ink-soft); margin-inline: .25em; }
+
+/* ── 꼬리 ─────────────────────────────────────────────────────────── */
+
+.colophon {
+  max-width: 1180px;
+  margin-inline: auto;
+  padding: clamp(1.75rem, 4vw, 3rem) var(--gutter) clamp(2.5rem, 6vw, 4rem);
+  color: var(--sky-ink);
+  opacity: .8;
+  font-family: var(--pixel-sm);
+  font-size: 9px;
+  line-height: 2.1;
+}
+.colophon p + p { margin-top: .5rem; }
+.colophon .quiet { opacity: .65; }
+
+.notice {
+  padding: .7rem .8rem;
+  margin-bottom: 1rem !important;
+  background: #2b2b2b;
+  border: 3px solid var(--edge);
+  border-inline-start: 6px solid var(--gold);
+  color: #ececec;
+}
+
+/* ── 좁은 화면 ────────────────────────────────────────────────────── */
+
+@media (max-width: 760px) {
+  .hud {
+    position: static;
+    width: auto;
+    margin: -2rem var(--gutter) 0;
+  }
+  #map { height: clamp(300px, 48vh, 420px); }
+  .wordmark { font-size: 14px; }
+  .temp-num { font-size: 70px; }
+  .deg { font-size: 14px; }
+  .daylist li { grid-template-columns: 5.5rem minmax(3rem, 1fr) 4rem; }
+  .daylist .d-sky { display: none; }
+}

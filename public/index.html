@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>격자예보 — 전국 1,650칸의 날씨</title>
+<meta name="description" content="기상청은 대한민국을 1,650칸의 격자로 나눠 예보합니다. 칸마다 블록 하나. 내 칸의 지금과 앞으로 사흘을 봅니다.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/quiple/galmuri/dist/galmuri.css">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body data-sky="clear" data-phase="day">
+
+<a class="skip" href="#now">본문으로 건너뛰기</a>
+
+<header class="masthead">
+  <h1 class="wordmark">격자예보</h1>
+
+  <div class="finder">
+    <label class="finder-label" for="q">동네 찾기</label>
+    <input id="q" type="text" role="combobox" autocomplete="off" spellcheck="false"
+           aria-expanded="false" aria-controls="results" aria-autocomplete="list"
+           placeholder="동네 이름">
+    <button id="locate" type="button" class="btn">현재 위치</button>
+    <ul id="results" class="results" role="listbox" aria-label="검색 결과" hidden></ul>
+  </div>
+</header>
+
+<main>
+  <section class="now" id="now" aria-labelledby="now-place">
+    <div class="terrain">
+      <svg id="map" role="img" preserveAspectRatio="xMinYMid meet"
+           aria-label="대한민국을 덮는 기상청 예보 격자 1,650칸을 블록으로 쌓은 지도. 읍면동이 많이 모인 칸일수록 높고 돌에 가깝습니다.">
+        <g id="map-cells"></g>
+        <g id="map-mark"></g>
+      </svg>
+      <output id="map-hint" class="map-hint">블록을 눌러 그 칸의 예보를 봅니다</output>
+    </div>
+
+    <div class="hud">
+      <p class="lede" id="now-place">동네를 고르면 예보가 열립니다</p>
+
+      <p class="temp">
+        <span class="temp-num" id="temp">--</span><span class="deg">°</span>
+      </p>
+
+      <p class="state" id="state">기상청 단기예보를 불러오는 중입니다.</p>
+
+      <dl class="vitals">
+        <div><dt>습도</dt><dd id="v-humidity">—</dd></div>
+        <div><dt>바람</dt><dd id="v-wind">—</dd></div>
+        <div><dt>강수</dt><dd id="v-rain">—</dd></div>
+        <div><dt>오늘</dt><dd id="v-range">—</dd></div>
+      </dl>
+
+      <p class="stamp" id="stamp"></p>
+    </div>
+  </section>
+
+  <section class="ahead" aria-labelledby="ahead-h">
+    <div class="section-head">
+      <h2 id="ahead-h">앞으로</h2>
+      <p class="section-note" id="ahead-note">초단기예보가 앞 여섯 시간을 덮어씁니다</p>
+    </div>
+    <div class="ribbon-scroll" id="ribbon-scroll" tabindex="0" aria-label="시간별 예보. 좌우로 넘겨 보세요.">
+      <svg id="ribbon" role="img" aria-describedby="ribbon-alt"></svg>
+    </div>
+    <p id="ribbon-alt" class="sr-only"></p>
+  </section>
+
+  <section class="days" aria-labelledby="days-h">
+    <div class="section-head">
+      <h2 id="days-h">날마다</h2>
+      <p class="section-note">막대는 그날의 최저부터 최고까지</p>
+    </div>
+    <ol class="daylist" id="daylist"></ol>
+  </section>
+</main>
+
+<footer class="colophon">
+  <p class="notice" id="notice" hidden></p>
+  <p>
+    예보는 기상청 단기예보 조회서비스에서 옵니다.
+    실황은 매시, 단기예보는 하루 여덟 번(02·05·08·11·14·17·20·23시) 새로 나옵니다.
+  </p>
+  <p class="quiet">
+    전국 읍면동 3,600곳이 5km 격자 1,650칸으로 모입니다.
+    블록 하나가 한 칸이고, 같은 칸에 든 동네는 같은 예보를 받습니다.
+  </p>
+</footer>
+
+<script src="/app.js" type="module"></script>
+</body>
+</html>
